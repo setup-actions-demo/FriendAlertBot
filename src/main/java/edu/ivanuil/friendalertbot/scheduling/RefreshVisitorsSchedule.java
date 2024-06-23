@@ -8,6 +8,7 @@ import edu.ivanuil.friendalertbot.service.TelegramBotService;
 import edu.ivanuil.friendalertbot.service.VisitorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -27,19 +28,19 @@ public class RefreshVisitorsSchedule {
     private final SubscriptionRepository subscriptionRepository;
     private final VisitorRepository visitorRepository;
 
+    @Value("${logging.entering-leaving-visitors-list}")
+    private boolean logIncomingLeavingList;
+
     @Scheduled(fixedRate = 10000)
     public void refreshVisitorsAndSendNotifications() {
         var arr = visitorService.getIncomingAndLeavingVisitors();
         List<VisitorEntity> incomingVisitors = arr[0];
         List<VisitorEntity> leavingVisitors = arr[1];
 
-        System.out.println("INCOMING: ");
-        for (var t : incomingVisitors)
-            System.out.println("    " + t.getLogin());
-        System.out.println("LEAVING: ");
-        for (var t : leavingVisitors)
-            System.out.println("    " + t.getLogin());
-        System.out.println();
+        if (logIncomingLeavingList) {
+            log.info("Incoming visitors: {}", incomingVisitors);
+            log.info("Leaving visitors: {}", leavingVisitors);
+        }
 
         Map<ChatEntity, List<VisitorEntity>> incoming = new HashMap<>();
         for (var t : incomingVisitors) {

@@ -38,4 +38,8 @@ public class VisitorEntity {
         return Objects.hashCode(login);
     }
 
+    @Override
+    public String toString() {
+        return login;
+    }
 }
