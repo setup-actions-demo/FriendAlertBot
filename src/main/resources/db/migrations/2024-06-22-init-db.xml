@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="2024-06-22-init-db" author="ivanuil">
+        
+        <createTable tableName="campus">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="name" type="VARCHAR"/>
+        </createTable>
+
+        <createTable tableName="cluster">
+            <column name="id" type="INTEGER">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="campus" type="UUID"/>
+            <column name="name" type="VARCHAR"/>
+        </createTable>
+        
+        <addForeignKeyConstraint baseTableName="cluster"
+                                 baseColumnNames="campus"
+                                 constraintName="fk_cluster_campus"
+                                 referencedTableName="campus"
+                                 referencedColumnNames="id"/>
+
+        <createTable tableName="visitors">
+            <column name="username" type="VARCHAR">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="cluster" type="INTEGER"/>
+            <column name="row" type="VARCHAR(1)"/>
+            <column name="number" type="INTEGER"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="visitors"
+                                 baseColumnNames="cluster"
+                                 constraintName="fk_visitors_cluster"
+                                 referencedTableName="cluster"
+                                 referencedColumnNames="id"/>
+
+        <createTable tableName="chat">
+            <column name="id" type="INTEGER">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="telegram_username" type="VARCHAR">
+                <constraints unique="true"/>
+            </column>
+            <column name="platform_username" type="VARCHAR"/>
+            <column name="state" type="VARCHAR"/>
+        </createTable>
+
+        <createTable tableName="friend_subscription">
+            <column name="id" type="INTEGER">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="subscriber_telegram" type="VARCHAR"/>
+            <column name="subscription_username" type="VARCHAR"/>
+        </createTable>
+
+        <createSequence sequenceName="friend_subscription_sequence" startValue="1" incrementBy="1"/>
+
+        <addForeignKeyConstraint baseTableName="friend_subscription"
+                                 baseColumnNames="subscriber_telegram"
+                                 constraintName="fk_friend_subscription_subscriber_telegram"
+                                 referencedTableName="chat"
+                                 referencedColumnNames="telegram_username"/>
+
+    </changeSet>
+
+</databaseChangeLog>
