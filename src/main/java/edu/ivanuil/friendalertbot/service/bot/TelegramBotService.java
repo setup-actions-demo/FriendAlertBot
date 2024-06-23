@@ -1,4 +1,4 @@
-package edu.ivanuil.friendalertbot.service;
+package edu.ivanuil.friendalertbot.service.bot;
 
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.Message;
@@ -8,6 +8,10 @@ import edu.ivanuil.friendalertbot.entity.ChatEntity;
 import edu.ivanuil.friendalertbot.entity.SubscriptionEntity;
 import edu.ivanuil.friendalertbot.repository.ChatRepository;
 import edu.ivanuil.friendalertbot.repository.SubscriptionRepository;
+import edu.ivanuil.friendalertbot.entity.ChatState;
+import edu.ivanuil.friendalertbot.service.School21PlatformBinding;
+import edu.ivanuil.friendalertbot.service.bot.messages.BotMessage;
+import edu.ivanuil.friendalertbot.service.bot.messages.ConfirmSubscriptionMessage;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,19 +117,35 @@ public class TelegramBotService {
     }
 
     private void subscribeToUsers(ChatEntity chat, List<String> users) {
-        Set<SubscriptionEntity> subscriptions = new HashSet<>();
-        for (String user : users)
-            subscriptions.add(new SubscriptionEntity(null, chat, user));
-        subscriptionRepository.saveAll(subscriptions);
+        for (var user : users)
+            subscribeToUser(chat, user);
     }
 
-    public void notifyUser(ChatEntity chat, String message) {
-        bot.execute(new SendMessage(chat.getId(), message));
+    private void subscribeToUser(ChatEntity chat, String user) {
+        if (!checkIfMatchesUsername(user)) {
+            bot.execute(new SendMessage(chat.getId(),
+                    String.format("Invalid username format, should be abc@student.21-school.ru (%s)", user)));
+            return;
+        }
+        if (!school21PlatformBinding.checkIfUserExists(user)) {
+            bot.execute(new SendMessage(chat.getId(),
+                    String.format("User doesn't exist. Try again (%s)", user)));
+            return;
+        }
+        var subscription = new SubscriptionEntity(null, chat, user);
+        subscriptionRepository.save(subscription);
+        sendMessage(new ConfirmSubscriptionMessage(chat, subscription));
     }
 
-    public void notifyUser(Map<ChatEntity, String> messages) {
-        for (var entry : messages.entrySet())
-            notifyUser(entry.getKey(), entry.getValue());
+    public void sendMessage(BotMessage message) {
+        if (bot == null)
+            bot = new TelegramBot(TOKEN);
+        bot.execute(new SendMessage(message.getChat().getId(), message.toString()));
+    }
+
+    public void sendMessages(List<BotMessage> messages) {
+        for (var message : messages)
+            sendMessage(message);
     }
 
 }
