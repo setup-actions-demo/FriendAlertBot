@@ -11,6 +11,7 @@ import edu.ivanuil.friendalertbot.repository.SubscriptionRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +27,8 @@ public class TelegramBotService {
 
     private final School21PlatformBinding school21PlatformBinding;
 
-    private static final String TOKEN = "7250425342:AAHqYXsb3_1PlpTCgL3-DtWBzM5tZrNJGU8";
+    @Value("${telegram.bot.token}")
+    private String TOKEN;
     private static int lastReadUpdateId = 0;
 
     private static final String COMMANDS_LIST_MESSAGE = """
@@ -35,10 +37,12 @@ public class TelegramBotService {
                 /subscribeAll - subscribe to all users currently in campus entering and leaving campus (experimental feature)
             """;
 
-    TelegramBot bot = new TelegramBot(TOKEN);
+    TelegramBot bot;
 
     @Scheduled(fixedDelay = 100)
     public void refreshUpdates() {
+        if (bot == null)
+            bot = new TelegramBot(TOKEN);
         log.info("Checking new messages");
         var updatesResponse = bot.execute(new GetUpdates().offset(lastReadUpdateId + 1));
         var updates = updatesResponse.updates();
