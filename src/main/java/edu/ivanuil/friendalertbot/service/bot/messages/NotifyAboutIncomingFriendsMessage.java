@@ -27,7 +27,7 @@ public class NotifyAboutIncomingFriendsMessage implements BotMessage {
             for (var visitor : incoming)
                 message.append(String.format("%s %s-%s\n",
                         visitor.getLogin(),
-                        visitor.getCluster(),
+                        visitor.getCluster().getName(),
                         visitor.getRow()+visitor.getNumber()));
         }
         if (!leaving.isEmpty()) {
