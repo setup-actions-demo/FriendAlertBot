@@ -11,6 +11,7 @@ import edu.ivanuil.friendalertbot.repository.CampusRepository;
 import edu.ivanuil.friendalertbot.repository.ClusterRepository;
 import edu.ivanuil.friendalertbot.repository.VisitorRepository;
 import edu.ivanuil.friendalertbot.repository.VisitorsLogRepository;
+import edu.ivanuil.friendalertbot.service.bot.TelegramBotService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ import java.util.*;
 public class VisitorService {
 
     private final School21PlatformBinding platformBinding;
+    private final TelegramBotService botService;
     private final List<UUID> campusIgnoreList;
     private final List<Integer> clusterIgnoreList;
 
@@ -116,6 +118,7 @@ public class VisitorService {
         visitors = newVisitors;
         log.info("Retrieved visitors for cluster : {} total, {} incoming, {} leaving",
                 visitors.size(), incomingVisitors.size(), leavingVisitors.size());
+        botService.sendGreetings(incomingVisitors);
         return new List[] {incomingVisitors, leavingVisitors};
     }
 
