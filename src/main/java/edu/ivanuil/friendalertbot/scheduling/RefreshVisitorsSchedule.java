@@ -3,7 +3,6 @@ package edu.ivanuil.friendalertbot.scheduling;
 import edu.ivanuil.friendalertbot.entity.SubscriptionEntity;
 import edu.ivanuil.friendalertbot.entity.VisitorEntity;
 import edu.ivanuil.friendalertbot.repository.SubscriptionRepository;
-import edu.ivanuil.friendalertbot.repository.VisitorRepository;
 import edu.ivanuil.friendalertbot.service.bot.TelegramBotService;
 import edu.ivanuil.friendalertbot.service.VisitorService;
 import edu.ivanuil.friendalertbot.service.bot.messages.BotMessage;

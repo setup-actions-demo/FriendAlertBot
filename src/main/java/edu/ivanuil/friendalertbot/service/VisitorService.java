@@ -3,14 +3,13 @@ package edu.ivanuil.friendalertbot.service;
 import edu.ivanuil.friendalertbot.entity.CampusEntity;
 import edu.ivanuil.friendalertbot.entity.ClusterEntity;
 import edu.ivanuil.friendalertbot.entity.VisitorEntity;
-import edu.ivanuil.friendalertbot.entity.VisitorsLogEntity;
 import edu.ivanuil.friendalertbot.mapper.CampusMapper;
 import edu.ivanuil.friendalertbot.mapper.ClusterMapper;
 import edu.ivanuil.friendalertbot.mapper.VisitorMapper;
+import edu.ivanuil.friendalertbot.repository.VisitorLogRepository;
 import edu.ivanuil.friendalertbot.repository.CampusRepository;
 import edu.ivanuil.friendalertbot.repository.ClusterRepository;
 import edu.ivanuil.friendalertbot.repository.VisitorRepository;
-import edu.ivanuil.friendalertbot.repository.VisitorsLogRepository;
 import edu.ivanuil.friendalertbot.service.bot.TelegramBotService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +31,6 @@ public class VisitorService {
     private final CampusRepository campusRepository;
     private final ClusterRepository clusterRepository;
     private final VisitorRepository visitorRepository;
-    private final VisitorsLogRepository visitorsLogRepository;
 
     private final CampusMapper campusMapper;
     private final ClusterMapper clusterMapper;
@@ -40,6 +38,7 @@ public class VisitorService {
 
     private final static Map<CampusEntity, List<ClusterEntity>> clusterMap = new HashMap<>();
     private static Set<VisitorEntity> visitors = new HashSet<>();
+    private final VisitorLogRepository visitorLogRepository;
 
     private List<CampusEntity> refreshCampusList() {
         var campusList = campusMapper.toCampusEntityList(
@@ -82,7 +81,7 @@ public class VisitorService {
     }
 
     private void logVisitorsCount(CampusEntity campus, ClusterEntity cluster, int visitors) {
-        visitorsLogRepository.save(new VisitorsLogEntity(null, null, campus.getName(), cluster.getName(), visitors));
+        visitorLogRepository.appendLog(campus.getName(), cluster.getName(), visitors);
     }
 
     public void refreshCampusesAndClusters() {
