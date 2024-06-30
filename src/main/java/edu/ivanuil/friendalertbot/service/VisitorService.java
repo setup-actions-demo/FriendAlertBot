@@ -1,8 +1,11 @@
 package edu.ivanuil.friendalertbot.service;
 
+import edu.ivanuil.friendalertbot.dto.VisitorDto;
 import edu.ivanuil.friendalertbot.entity.CampusEntity;
 import edu.ivanuil.friendalertbot.entity.ClusterEntity;
+import edu.ivanuil.friendalertbot.entity.TransitDirection;
 import edu.ivanuil.friendalertbot.entity.VisitorEntity;
+import edu.ivanuil.friendalertbot.exception.ClickHouseClientException;
 import edu.ivanuil.friendalertbot.mapper.CampusMapper;
 import edu.ivanuil.friendalertbot.mapper.ClusterMapper;
 import edu.ivanuil.friendalertbot.mapper.VisitorMapper;
@@ -31,6 +34,7 @@ public class VisitorService {
     private final CampusRepository campusRepository;
     private final ClusterRepository clusterRepository;
     private final VisitorRepository visitorRepository;
+    private final VisitorLogRepository visitorLogRepository;
 
     private final CampusMapper campusMapper;
     private final ClusterMapper clusterMapper;
@@ -38,7 +42,6 @@ public class VisitorService {
 
     private final static Map<CampusEntity, List<ClusterEntity>> clusterMap = new HashMap<>();
     private static Set<VisitorEntity> visitors = new HashSet<>();
-    private final VisitorLogRepository visitorLogRepository;
 
     private List<CampusEntity> refreshCampusList() {
         var campusList = campusMapper.toCampusEntityList(
@@ -81,7 +84,7 @@ public class VisitorService {
     }
 
     private void logVisitorsCount(CampusEntity campus, ClusterEntity cluster, int visitors) {
-        visitorLogRepository.appendLog(campus.getName(), cluster.getName(), visitors);
+        visitorLogRepository.appendVisitorsCountLog(campus.getName(), cluster.getName(), visitors);
     }
 
     public void refreshCampusesAndClusters() {
@@ -108,17 +111,41 @@ public class VisitorService {
 
         List<VisitorEntity> leavingVisitors = new LinkedList<>();
         for (VisitorEntity visitor : visitors) {
-            if (!newVisitors.contains(visitor))
+            if (!newVisitors.contains(visitor)) {
                 leavingVisitors.add(visitor);
+                logLeaving(visitor);
+            }
         }
 
         visitorRepository.saveAll(incomingVisitors);
         visitorRepository.deleteAll(leavingVisitors);
         visitors = newVisitors;
+        logIncoming(incomingVisitors);
         log.info("Retrieved visitors for cluster : {} total, {} incoming, {} leaving",
                 visitors.size(), incomingVisitors.size(), leavingVisitors.size());
         botService.sendGreetings(incomingVisitors);
+        logCommit();
         return new List[] {incomingVisitors, leavingVisitors};
+    }
+
+    Map<VisitorDto, TransitDirection> map = new HashMap<>();
+
+    private void logIncoming(List<VisitorEntity> incoming) {
+        for (var visitor : incoming)
+            map.put(visitorMapper.toVisitorDto(visitor), TransitDirection.ENTERING);
+    }
+
+    private void logLeaving(VisitorEntity visitor) {
+        map.put(visitorMapper.toVisitorDto(visitor), TransitDirection.LEAVING);
+    }
+
+    private void logCommit() {
+        try {
+            visitorLogRepository.appendVisitorsEnteringAndLeaving(map);
+        } catch (ClickHouseClientException e) {
+            log.error("Logging entering and leaving visitors threw an exception", e);
+        }
+        map.clear();
     }
 
     @PostConstruct
