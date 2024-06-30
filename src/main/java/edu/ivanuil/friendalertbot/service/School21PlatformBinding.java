@@ -43,7 +43,7 @@ public class School21PlatformBinding {
     }
 
     public void authorise() {
-        log.info("School21 platform token not found, attempting to authorise");
+        log.info("School21 platform token not found or obsolete, attempting to authorise");
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -71,6 +71,8 @@ public class School21PlatformBinding {
                     GET_CAMPUSES_URL, HttpMethod.GET, getRequestEntity(), CampusesDto.class);
             return response.getBody().getCampuses();
         } catch (RuntimeException e) {
+            if (e.getMessage().contains("401"))
+                authorise();
             throw new TooManyRequestsException(e);
         }
     }
@@ -85,6 +87,8 @@ public class School21PlatformBinding {
                     String.format(GET_CLUSTERS_URL, campusId), HttpMethod.GET, getRequestEntity(), ClustersDto.class);
             return response.getBody().getClusters();
         } catch (RuntimeException e) {
+            if (e.getMessage().contains("401"))
+                authorise();
             throw new TooManyRequestsException(e);
         }
     }
@@ -100,6 +104,8 @@ public class School21PlatformBinding {
                     getRequestEntity(), ClusterMapDto.class);
             return response.getBody().getClusterMap();
         } catch (RuntimeException e) {
+            if (e.getMessage().contains("401"))
+                authorise();
             throw new TooManyRequestsException(e);
         }
     }
@@ -115,6 +121,8 @@ public class School21PlatformBinding {
                     getRequestEntity(), ParticipantDto.class);
             return true;
         } catch (HttpClientErrorException e) {
+            if (e.getMessage().contains("401"))
+                authorise();
             if (e.getMessage().contains("404"))
                 return false;
             else
