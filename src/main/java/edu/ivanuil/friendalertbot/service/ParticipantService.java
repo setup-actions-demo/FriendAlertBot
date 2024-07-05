@@ -9,6 +9,7 @@ import edu.ivanuil.friendalertbot.repository.ParticipantInfoLogRepository;
 import edu.ivanuil.friendalertbot.repository.ParticipantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -27,8 +28,10 @@ public class ParticipantService {
     private final ParticipantRepository participantRepository;
     private final ParticipantInfoLogRepository participantLogRepository;
 
-    private final int PAGE_SIZE = 100;
-    private final long REFRESH_INTERVAL = 86_400_000; // Once per day
+    @Value("${s21.participants.page-size}")
+    private int PAGE_SIZE;
+    @Value("${s21.participants.obsolescence-time}")
+    private long REFRESH_INTERVAL;
 
     public void refreshAll() {
         campusRepository.findAll().forEach(this::refreshForCampus);
