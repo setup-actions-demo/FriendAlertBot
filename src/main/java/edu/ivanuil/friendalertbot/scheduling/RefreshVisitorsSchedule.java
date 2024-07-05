@@ -10,11 +10,15 @@ import edu.ivanuil.friendalertbot.service.bot.messages.NotifyAboutIncomingFriend
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.sql.Timestamp;
 import java.util.LinkedList;
 import java.util.List;
+
+import static edu.ivanuil.friendalertbot.util.TimeFormatUtils.formatIntervalFromNow;
 
 @Component
 @RequiredArgsConstructor
@@ -29,8 +33,11 @@ public class RefreshVisitorsSchedule {
     @Value("${logging.entering-leaving-visitors-list}")
     private boolean logIncomingLeavingList;
 
-    @Scheduled(fixedRate = 10000)
+    @Scheduled(fixedDelay = 40_000)
+    @Async("jobPool")
     public void refreshVisitorsAndSendNotifications() {
+        Timestamp operationStartTime = new Timestamp(System.currentTimeMillis());
+
         var arr = visitorService.getIncomingAndLeavingVisitors();
         List<VisitorEntity> incomingVisitors = arr[0];
         List<VisitorEntity> leavingVisitors = arr[1];
@@ -65,6 +72,9 @@ public class RefreshVisitorsSchedule {
 
         log.info("Sending notifications to {} users", messages.size());
         botService.sendMessages(messages);
+
+        log.info("Refreshed visitors and sent out notifications, operation took {}",
+                formatIntervalFromNow(operationStartTime));
     }
 
 }

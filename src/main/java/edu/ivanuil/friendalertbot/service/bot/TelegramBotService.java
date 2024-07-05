@@ -19,12 +19,12 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
+
+import static edu.ivanuil.friendalertbot.util.TimeFormatUtils.formatInterval;
 
 @Service
 @RequiredArgsConstructor
@@ -50,7 +50,6 @@ public class TelegramBotService {
 
     TelegramBot bot;
 
-    @Scheduled(fixedDelay = 1000)
     public void refreshUpdates() {
         if (bot == null)
             bot = new TelegramBot(TOKEN);
@@ -66,14 +65,6 @@ public class TelegramBotService {
             lastReadUpdateId = update.updateId();
             processMessage(update.message());
         }
-    }
-
-    private static String formatInterval(final long l) {
-        long hr = TimeUnit.MILLISECONDS.toHours(l);
-        long min = TimeUnit.MILLISECONDS.toMinutes(l - TimeUnit.HOURS.toMillis(hr));
-        long sec = TimeUnit.MILLISECONDS.toSeconds(l - TimeUnit.HOURS.toMillis(hr) - TimeUnit.MINUTES.toMillis(min));
-        long ms = TimeUnit.MILLISECONDS.toMillis(l - TimeUnit.HOURS.toMillis(hr) - TimeUnit.MINUTES.toMillis(min) - TimeUnit.SECONDS.toMillis(sec));
-        return String.format("%02d:%02d:%02d.%03d", hr, min, sec, ms);
     }
 
     private void processMessage(Message message) {

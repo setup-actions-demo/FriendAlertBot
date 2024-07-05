@@ -128,24 +128,24 @@ public class VisitorService {
         return new List[] {incomingVisitors, leavingVisitors};
     }
 
-    Map<VisitorDto, TransitDirection> map = new HashMap<>();
+    final Map<VisitorDto, TransitDirection> visitorDirectionMap = new HashMap<>();
 
     private void logIncoming(List<VisitorEntity> incoming) {
         for (var visitor : incoming)
-            map.put(visitorMapper.toVisitorDto(visitor), TransitDirection.ENTERING);
+            visitorDirectionMap.put(visitorMapper.toVisitorDto(visitor), TransitDirection.ENTERING);
     }
 
     private void logLeaving(VisitorEntity visitor) {
-        map.put(visitorMapper.toVisitorDto(visitor), TransitDirection.LEAVING);
+        visitorDirectionMap.put(visitorMapper.toVisitorDto(visitor), TransitDirection.LEAVING);
     }
 
     private void logCommit() {
         try {
-            visitorLogRepository.appendVisitorsEnteringAndLeaving(map);
+            visitorLogRepository.appendVisitorsEnteringAndLeaving(visitorDirectionMap);
         } catch (ClickHouseClientException e) {
             log.error("Logging entering and leaving visitors threw an exception", e);
         }
-        map.clear();
+        visitorDirectionMap.clear();
     }
 
     @PostConstruct

@@ -1,6 +1,7 @@
 package edu.ivanuil.friendalertbot.service;
 
 import edu.ivanuil.friendalertbot.dto.platform.auth.TokenDto;
+import edu.ivanuil.friendalertbot.exception.EntityNotFoundException;
 import edu.ivanuil.friendalertbot.exception.TooManyRequestsException;
 import edu.ivanuil.friendalertbot.dto.platform.*;
 import lombok.extern.slf4j.Slf4j;
@@ -22,11 +23,18 @@ public class School21PlatformBinding {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    private static final String GET_TOKEN_URL = "https://auth.sberclass.ru/auth/realms/EduPowerKeycloak/protocol/openid-connect/token";
-    private static final String GET_CAMPUSES_URL = "https://edu-api.21-school.ru/services/21-school/api/v1/campuses";
-    private static final String GET_CLUSTERS_URL = "https://edu-api.21-school.ru/services/21-school/api/v1/campuses/%s/clusters";
-    private static final String GET_CLUSTER_VISITORS_URL = "https://edu-api.21-school.ru/services/21-school/api/v1/clusters/%s/map?limit=1000&offset=0&occupied=true";
-    private static final String GET_USER_INFO_URL = "https://edu-api.21-school.ru/services/21-school/api/v1/participants/%s";
+    private static final String GET_TOKEN_URL =
+            "https://auth.sberclass.ru/auth/realms/EduPowerKeycloak/protocol/openid-connect/token";
+    private static final String GET_CAMPUSES_URL =
+            "https://edu-api.21-school.ru/services/21-school/api/v1/campuses";
+    private static final String GET_CLUSTERS_URL =
+            "https://edu-api.21-school.ru/services/21-school/api/v1/campuses/%s/clusters";
+    private static final String GET_CLUSTER_VISITORS_URL =
+            "https://edu-api.21-school.ru/services/21-school/api/v1/clusters/%s/map?limit=1000&offset=0&occupied=true";
+    private static final String GET_USER_INFO_URL =
+            "https://edu-api.21-school.ru/services/21-school/api/v1/participants/%s";
+    private static final String GET_PARTICIPANT_LIST_URL =
+            "https://edu-api.21-school.ru/services/21-school/api/v1/campuses/%s/participants?limit=%d&offset=%d";
 
     @Value("${school21.platform.username}")
     private String username;
@@ -127,6 +135,42 @@ public class School21PlatformBinding {
                 return false;
             else
                 throw new TooManyRequestsException(e);
+        }
+    }
+
+    @Retryable(retryFor = TooManyRequestsException.class, maxAttempts = 5, backoff = @Backoff(delay = 1000))
+    public ParticipantDto getUserInfo(String login) throws EntityNotFoundException {
+        if (TOKEN == null || TOKEN.isEmpty())
+            authorise();
+
+        try {
+            ResponseEntity<ParticipantDto> response = restTemplate.exchange(
+                    String.format(GET_USER_INFO_URL, login), HttpMethod.GET,
+                    getRequestEntity(), ParticipantDto.class);
+            return response.getBody();
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("401") || e.getMessage().contains("403"))
+                authorise();
+            if (e.getMessage().contains("404"))
+                throw new EntityNotFoundException();
+            throw new TooManyRequestsException(e);
+        }
+    }
+
+    @Retryable(retryFor = TooManyRequestsException.class, maxAttempts = 5, backoff = @Backoff(delay = 1000))
+    public ParticipantsListDto getParticipantList(UUID campusId, int limit, int offset) {
+        if (TOKEN == null || TOKEN.isEmpty())
+            authorise();
+
+        try {
+            ResponseEntity<ParticipantsListDto> response = restTemplate.exchange(
+                    String.format(GET_PARTICIPANT_LIST_URL, campusId, limit, offset), HttpMethod.GET,
+                    getRequestEntity(), ParticipantsListDto.class);
+            return response.getBody();
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("401"))
+                authorise();
+            throw new TooManyRequestsException(e);
         }
     }
 

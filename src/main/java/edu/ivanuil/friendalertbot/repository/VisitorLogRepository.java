@@ -6,8 +6,8 @@ import edu.ivanuil.friendalertbot.dto.VisitorDto;
 import edu.ivanuil.friendalertbot.entity.TransitDirection;
 import edu.ivanuil.friendalertbot.exception.ClickHouseClientException;
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
@@ -16,18 +16,11 @@ import java.util.Map;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class VisitorLogRepository {
 
     private final ClickHouseNode node;
     private final ClickHouseCredentials credentials;
-
-    public VisitorLogRepository(@Value("${clickhouse.url}") String url,
-                                @Value("${clickhouse.username}") String username,
-                                @Value("${clickhouse.password}") String password) {
-        node = ClickHouseNode.of(url + "?compress=0");
-        credentials = ClickHouseCredentials
-                .fromUserAndPassword(username,password);
-    }
 
     @PostConstruct
     public void createSchema() {
