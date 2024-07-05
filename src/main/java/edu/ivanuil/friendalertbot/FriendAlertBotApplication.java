@@ -9,10 +9,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableRetry
 @EnableScheduling
-@EnableAsync(proxyTargetClass=true)
+@EnableAsync(proxyTargetClass = true)
 public class FriendAlertBotApplication {
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         SpringApplication.run(FriendAlertBotApplication.class, args);
     }
 

@@ -10,15 +10,15 @@ import org.springframework.context.annotation.Configuration;
 public class ClickHouseConfiguration {
 
     @Bean
-    public ClickHouseNode clickHouseNode(@Value("${clickhouse.url}") String url) {
+    public ClickHouseNode clickHouseNode(@Value("${clickhouse.url}") final String url) {
         return ClickHouseNode.of(url + "?compress=0");
     }
 
     @Bean
-    public ClickHouseCredentials clickHouseCredentials(@Value("${clickhouse.username}") String username,
-                                                       @Value("${clickhouse.password}") String password) {
+    public ClickHouseCredentials clickHouseCredentials(@Value("${clickhouse.username}") final String username,
+                                                       @Value("${clickhouse.password}") final String password) {
         return ClickHouseCredentials
-                .fromUserAndPassword(username,password);
+                .fromUserAndPassword(username, password);
     }
 
 }

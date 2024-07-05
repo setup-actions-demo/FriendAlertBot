@@ -19,7 +19,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.UUID;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.LinkedList;
 
 @Service
 @RequiredArgsConstructor
@@ -40,8 +46,9 @@ public class VisitorService {
     private final ClusterMapper clusterMapper;
     private final VisitorMapper visitorMapper;
 
-    private final static Map<CampusEntity, List<ClusterEntity>> clusterMap = new HashMap<>();
+    private final Map<CampusEntity, List<ClusterEntity>> clusterMap = new HashMap<>();
     private static Set<VisitorEntity> visitors = new HashSet<>();
+    private final Map<VisitorDto, TransitDirection> visitorDirectionMap = new HashMap<>();
 
     private List<CampusEntity> refreshCampusList() {
         var campusList = campusMapper.toCampusEntityList(
@@ -57,7 +64,7 @@ public class VisitorService {
         return campusList;
     }
 
-    private List<ClusterEntity> refreshClusterListForCampus(CampusEntity campusEntity) {
+    private List<ClusterEntity> refreshClusterListForCampus(final CampusEntity campusEntity) {
         var clusterList = clusterMapper.toClusterEntityList(
                 platformBinding.getClusters(campusEntity.getId()));
         int totalClusters = clusterList.size();
@@ -73,7 +80,7 @@ public class VisitorService {
         return clusterList;
     }
 
-    private List<VisitorEntity> getVisitorsForCluster(ClusterEntity cluster) {
+    private List<VisitorEntity> getVisitorsForCluster(final ClusterEntity cluster) {
         var visitorList = visitorMapper.toVisitorList(
                 platformBinding.getClusterVisitors(cluster.getId()));
         for (var visitor : visitorList)
@@ -83,7 +90,7 @@ public class VisitorService {
         return visitorList;
     }
 
-    private void logVisitorsCount(CampusEntity campus, ClusterEntity cluster, int visitors) {
+    private void logVisitorsCount(final CampusEntity campus, final ClusterEntity cluster, final int visitors) {
         visitorLogRepository.appendVisitorsCountLog(campus.getName(), cluster.getName(), visitors);
     }
 
@@ -128,14 +135,12 @@ public class VisitorService {
         return new List[] {incomingVisitors, leavingVisitors};
     }
 
-    final Map<VisitorDto, TransitDirection> visitorDirectionMap = new HashMap<>();
-
-    private void logIncoming(List<VisitorEntity> incoming) {
+    private void logIncoming(final List<VisitorEntity> incoming) {
         for (var visitor : incoming)
             visitorDirectionMap.put(visitorMapper.toVisitorDto(visitor), TransitDirection.ENTERING);
     }
 
-    private void logLeaving(VisitorEntity visitor) {
+    private void logLeaving(final VisitorEntity visitor) {
         visitorDirectionMap.put(visitorMapper.toVisitorDto(visitor), TransitDirection.LEAVING);
     }
 

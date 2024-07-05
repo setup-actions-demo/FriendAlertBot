@@ -16,21 +16,22 @@ import edu.ivanuil.friendalertbot.service.bot.messages.BotMessage;
 import edu.ivanuil.friendalertbot.service.bot.messages.ConfirmSubscriptionMessage;
 import edu.ivanuil.friendalertbot.service.bot.messages.WelcomeToCampusMessage;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.LinkedList;
 
 import static edu.ivanuil.friendalertbot.util.TimeFormatUtils.formatInterval;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class TelegramBotService {
 
-    private static final Logger log = LoggerFactory.getLogger(TelegramBotService.class);
     private final ChatRepository chatRepository;
     private final SubscriptionRepository subscriptionRepository;
 
@@ -38,21 +39,22 @@ public class TelegramBotService {
     private final VisitorRepository visitorRepository;
 
     @Value("${telegram.bot.token}")
-    private String TOKEN;
+    private String token;
     private static int lastReadUpdateId = 0;
     private Timestamp lastMessageCheckTime = new Timestamp(System.currentTimeMillis());
 
     private static final String COMMANDS_LIST_MESSAGE = """
             Commands:
                 /subscribe [username1] [username2] ... - subscribe to user entering and leaving campus
-                /subscribeAll - subscribe to all users currently in campus entering and leaving campus (experimental feature)
+                /subscribeAll - subscribe to all users currently in campus entering and leaving campus
+                (experimental feature)
             """;
 
-    TelegramBot bot;
+    private TelegramBot bot;
 
     public void refreshUpdates() {
         if (bot == null)
-            bot = new TelegramBot(TOKEN);
+            bot = new TelegramBot(token);
 
         Timestamp messageCheckTime = new Timestamp(System.currentTimeMillis());
         log.info("Checking new messages, time since last check {}",
@@ -67,7 +69,7 @@ public class TelegramBotService {
         }
     }
 
-    private void processMessage(Message message) {
+    private void processMessage(final Message message) {
         var chatId = message.chat().id();
         if (chatRepository.existsById(chatId)) {
             var chat = chatRepository.findById(chatId).get();
@@ -81,7 +83,7 @@ public class TelegramBotService {
         }
     }
 
-    private void processFirstMessage(Long chatId, Message message) {
+    private void processFirstMessage(final Long chatId, final Message message) {
         if (!message.text().equals("/start"))
             return;
         bot.execute(new SendMessage(chatId,
@@ -91,7 +93,7 @@ public class TelegramBotService {
         chatRepository.save(chat);
     }
 
-    private void processPlatformUsername(ChatEntity chat, Message message) {
+    private void processPlatformUsername(final ChatEntity chat, final Message message) {
         if (checkIfMatchesUsername(message.text())) {
             if (school21PlatformBinding.checkIfUserExists(message.text())) {
                 chat.setState(ChatState.RUNNING);
@@ -111,7 +113,7 @@ public class TelegramBotService {
         }
     }
 
-    private boolean checkIfMatchesUsername(String username) {
+    private boolean checkIfMatchesUsername(final String username) {
         if (!username.endsWith("@student.21-school.ru"))
             return false;
         if (username.split("@").length != 2)
@@ -120,19 +122,19 @@ public class TelegramBotService {
         return login.length() == 8 && login.matches("[a-zA-Z]+");
     }
 
-    private void processCommand(ChatEntity chat, Message message) {
+    private void processCommand(final ChatEntity chat, final Message message) {
         if (message.text().startsWith("/subscribe")) {
             var tokens = message.text().split(" ");
             subscribeToUsers(chat, new LinkedList<>(Arrays.asList(tokens).subList(1, tokens.length)));
         }
     }
 
-    private void subscribeToUsers(ChatEntity chat, List<String> users) {
+    private void subscribeToUsers(final ChatEntity chat, final List<String> users) {
         for (var user : users)
             subscribeToUser(chat, user);
     }
 
-    private void subscribeToUser(ChatEntity chat, String user) {
+    private void subscribeToUser(final ChatEntity chat, final String user) {
         if (!checkIfMatchesUsername(user)) {
             bot.execute(new SendMessage(chat.getId(),
                     String.format("Invalid username format, should be abc@student.21-school.ru (%s)", user)));
@@ -148,18 +150,18 @@ public class TelegramBotService {
         sendMessage(new ConfirmSubscriptionMessage(chat, subscription));
     }
 
-    public void sendMessage(BotMessage message) {
+    public void sendMessage(final BotMessage message) {
         if (bot == null)
-            bot = new TelegramBot(TOKEN);
+            bot = new TelegramBot(token);
         bot.execute(new SendMessage(message.getChat().getId(), message.toString()));
     }
 
-    public void sendMessages(List<BotMessage> messages) {
+    public void sendMessages(final List<BotMessage> messages) {
         for (var message : messages)
             sendMessage(message);
     }
 
-    public void sendGreetings(List<VisitorEntity> visitors) {
+    public void sendGreetings(final List<VisitorEntity> visitors) {
         List<BotMessage> messages = new LinkedList<>();
         for (var visitor : visitors) {
             var chatOpt = chatRepository.findByPlatformUsername(visitor.getLogin());
@@ -174,7 +176,7 @@ public class TelegramBotService {
         sendMessages(messages);
     }
 
-    private List<VisitorEntity> getFriendsInCampusList(String telegramUsername) {
+    private List<VisitorEntity> getFriendsInCampusList(final String telegramUsername) {
         List<VisitorEntity> res = new LinkedList<>();
         var subs = subscriptionRepository.findAllBySubscriberChat_TelegramUsername(telegramUsername);
         for (var sub : subs) {

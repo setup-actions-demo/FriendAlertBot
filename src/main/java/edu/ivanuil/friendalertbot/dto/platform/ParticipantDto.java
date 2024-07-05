@@ -5,13 +5,13 @@ import lombok.Data;
 @Data
 public class ParticipantDto {
 
-    String login;
-    String className;
-    String parallelName;
-    Integer expValue;
-    Integer level;
-    Integer expToNextLevel;
-    CampusDto campus;
-    String status;
+    private String login;
+    private String className;
+    private String parallelName;
+    private Integer expValue;
+    private Integer level;
+    private Integer expToNextLevel;
+    private CampusDto campus;
+    private String status;
 
 }

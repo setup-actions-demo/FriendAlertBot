@@ -3,10 +3,21 @@ package edu.ivanuil.friendalertbot.service;
 import edu.ivanuil.friendalertbot.dto.platform.auth.TokenDto;
 import edu.ivanuil.friendalertbot.exception.EntityNotFoundException;
 import edu.ivanuil.friendalertbot.exception.TooManyRequestsException;
-import edu.ivanuil.friendalertbot.dto.platform.*;
+import edu.ivanuil.friendalertbot.dto.platform.CampusDto;
+import edu.ivanuil.friendalertbot.dto.platform.ClusterDto;
+import edu.ivanuil.friendalertbot.dto.platform.WorkplaceDto;
+import edu.ivanuil.friendalertbot.dto.platform.ParticipantDto;
+import edu.ivanuil.friendalertbot.dto.platform.ParticipantsListDto;
+import edu.ivanuil.friendalertbot.dto.platform.CampusesDto;
+import edu.ivanuil.friendalertbot.dto.platform.ClustersDto;
+import edu.ivanuil.friendalertbot.dto.platform.ClusterMapDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
@@ -41,12 +52,12 @@ public class School21PlatformBinding {
     @Value("${school21.platform.password}")
     private String password;
 
-    private String TOKEN;
+    private String token;
 
     private HttpEntity<Void> getRequestEntity() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("Authorization", TOKEN);
+        headers.add("Authorization", token);
         return new HttpEntity<>(headers);
     }
 
@@ -56,8 +67,8 @@ public class School21PlatformBinding {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-        map.add("grant_type","password");
-        map.add("client_id","s21-open-api");
+        map.add("grant_type", "password");
+        map.add("client_id", "s21-open-api");
         map.add("username", username);
         map.add("password", password);
         var requestEntity = new HttpEntity<>(map, headers);
@@ -65,13 +76,13 @@ public class School21PlatformBinding {
         ResponseEntity<TokenDto> response = restTemplate.exchange(
                 GET_TOKEN_URL, HttpMethod.POST, requestEntity, TokenDto.class);
 
-        TOKEN = response.getBody().getTokenType() + " " + response.getBody().getAccessToken();
+        token = response.getBody().getTokenType() + " " + response.getBody().getAccessToken();
         log.info("School21 platform authorised");
     }
 
     @Retryable(retryFor = TooManyRequestsException.class, maxAttempts = 5, backoff = @Backoff(delay = 1000))
     public CampusDto[] getCampuses() {
-        if (TOKEN == null || TOKEN.isEmpty())
+        if (token == null || token.isEmpty())
             authorise();
 
         try {
@@ -86,8 +97,8 @@ public class School21PlatformBinding {
     }
 
     @Retryable(retryFor = TooManyRequestsException.class, maxAttempts = 5, backoff = @Backoff(delay = 1000))
-    public ClusterDto[] getClusters(UUID campusId) {
-        if (TOKEN == null || TOKEN.isEmpty())
+    public ClusterDto[] getClusters(final UUID campusId) {
+        if (token == null || token.isEmpty())
             authorise();
 
         try {
@@ -102,8 +113,8 @@ public class School21PlatformBinding {
     }
 
     @Retryable(retryFor = TooManyRequestsException.class, maxAttempts = 5, backoff = @Backoff(delay = 1500))
-    public WorkplaceDto[] getClusterVisitors(Integer clusterId) {
-        if (TOKEN == null || TOKEN.isEmpty())
+    public WorkplaceDto[] getClusterVisitors(final Integer clusterId) {
+        if (token == null || token.isEmpty())
             authorise();
 
         try {
@@ -119,8 +130,8 @@ public class School21PlatformBinding {
     }
 
     @Retryable(retryFor = TooManyRequestsException.class, maxAttempts = 5, backoff = @Backoff(delay = 1000))
-    public boolean checkIfUserExists(String username) {
-        if (TOKEN == null || TOKEN.isEmpty())
+    public boolean checkIfUserExists(final String username) {
+        if (token == null || token.isEmpty())
             authorise();
 
         try {
@@ -139,8 +150,8 @@ public class School21PlatformBinding {
     }
 
     @Retryable(retryFor = TooManyRequestsException.class, maxAttempts = 5, backoff = @Backoff(delay = 1000))
-    public ParticipantDto getUserInfo(String login) throws EntityNotFoundException {
-        if (TOKEN == null || TOKEN.isEmpty())
+    public ParticipantDto getUserInfo(final String login) throws EntityNotFoundException {
+        if (token == null || token.isEmpty())
             authorise();
 
         try {
@@ -158,8 +169,8 @@ public class School21PlatformBinding {
     }
 
     @Retryable(retryFor = TooManyRequestsException.class, maxAttempts = 5, backoff = @Backoff(delay = 1000))
-    public ParticipantsListDto getParticipantList(UUID campusId, int limit, int offset) {
-        if (TOKEN == null || TOKEN.isEmpty())
+    public ParticipantsListDto getParticipantList(final UUID campusId, final int limit, final int offset) {
+        if (token == null || token.isEmpty())
             authorise();
 
         try {

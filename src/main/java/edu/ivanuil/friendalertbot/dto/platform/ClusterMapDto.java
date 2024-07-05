@@ -5,6 +5,6 @@ import lombok.Data;
 @Data
 public class ClusterMapDto {
 
-    WorkplaceDto[] clusterMap;
+    private WorkplaceDto[] clusterMap;
 
 }

@@ -5,6 +5,6 @@ import lombok.Data;
 @Data
 public class ClustersDto {
 
-    ClusterDto[] clusters;
+    private ClusterDto[] clusters;
 
 }

@@ -5,10 +5,10 @@ import lombok.Data;
 @Data
 public class ClusterDto {
 
-    Integer id;
-    String name;
-    Integer capacity;
-    Integer availableCapacity;
-    Integer floor;
+    private Integer id;
+    private String name;
+    private Integer capacity;
+    private Integer availableCapacity;
+    private Integer floor;
 
 }

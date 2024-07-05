@@ -28,7 +28,7 @@ public class NotifyAboutIncomingFriendsMessage implements BotMessage {
                 message.append(String.format("%s %s-%s\n",
                         visitor.getLogin(),
                         visitor.getCluster().getName(),
-                        visitor.getRow()+visitor.getNumber()));
+                        visitor.getRow() + visitor.getNumber()));
         }
         if (!leaving.isEmpty()) {
             message.append("Some of your friends just left campus:\n");

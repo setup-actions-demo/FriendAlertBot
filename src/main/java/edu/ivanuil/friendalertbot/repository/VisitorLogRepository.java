@@ -1,6 +1,11 @@
 package edu.ivanuil.friendalertbot.repository;
 
-import com.clickhouse.client.*;
+import com.clickhouse.client.ClickHouseNode;
+import com.clickhouse.client.ClickHouseCredentials;
+import com.clickhouse.client.ClickHouseClient;
+import com.clickhouse.client.ClickHouseProtocol;
+import com.clickhouse.client.ClickHouseException;
+import com.clickhouse.client.ClickHouseResponse;
 import com.clickhouse.data.ClickHouseFormat;
 import edu.ivanuil.friendalertbot.dto.VisitorDto;
 import edu.ivanuil.friendalertbot.entity.TransitDirection;
@@ -34,10 +39,12 @@ public class VisitorLogRepository {
                      .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
                      .query("""
                         CREATE TABLE IF NOT EXISTS visitors_count_log (
-                                     timestamp TIMESTAMP PRIMARY KEY,
-                                     campus VARCHAR PRIMARY KEY,
-                                     cluster VARCHAR PRIMARY KEY,
-                                     visitors_count INTEGER);
+                                     timestamp TIMESTAMP,
+                                     campus VARCHAR,
+                                     cluster VARCHAR,
+                                     visitors_count INTEGER)
+                        ENGINE MergeTree
+                        PRIMARY KEY (timestamp, campus, cluster);
                         """)
                      .executeAndWait()) {
             log.info("Created visitors_log table in ClickHouse");
@@ -52,12 +59,14 @@ public class VisitorLogRepository {
                      .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
                      .query("""
                         CREATE TABLE IF NOT EXISTS visitors_transit_log (
-                                     timestamp TIMESTAMP PRIMARY KEY,
+                                     timestamp TIMESTAMP,
                                      campus VARCHAR,
                                      cluster VARCHAR,
                                      place VARCHAR(2),
-                                     login VARCHAR PRIMARY KEY,
-                                     direction VARCHAR);
+                                     login VARCHAR,
+                                     direction VARCHAR)
+                        ENGINE MergeTree
+                        PRIMARY KEY (timestamp, login);
                         """)
                      .executeAndWait()) {
             log.info("Created visitors_transit_log table in ClickHouse");
@@ -67,7 +76,7 @@ public class VisitorLogRepository {
     }
 
     @Retryable(retryFor = ClickHouseClientException.class, maxAttempts = 2, backoff = @Backoff(delay = 100))
-    public void appendVisitorsCountLog(String campus, String cluster, int visitorsCount) {
+    public void appendVisitorsCountLog(final String campus, final String cluster, final int visitorsCount) {
         try (ClickHouseClient client = ClickHouseClient.newInstance(credentials, ClickHouseProtocol.HTTP);
             ClickHouseResponse response = client.write(node)
                     .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
@@ -85,7 +94,7 @@ public class VisitorLogRepository {
     }
 
     @Retryable(retryFor = ClickHouseClientException.class, maxAttempts = 2, backoff = @Backoff(delay = 100))
-    public void appendVisitorsEnteringAndLeaving(Map<VisitorDto, TransitDirection> visitors) {
+    public void appendVisitorsEnteringAndLeaving(final Map<VisitorDto, TransitDirection> visitors) {
         StringBuilder query = new StringBuilder("""
                             INSERT INTO visitors_transit_log(timestamp, campus, cluster, login, direction, place)
                             VALUES

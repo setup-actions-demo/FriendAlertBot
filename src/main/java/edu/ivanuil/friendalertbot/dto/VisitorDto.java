@@ -5,10 +5,10 @@ import lombok.Data;
 @Data
 public class VisitorDto {
 
-    String campus;
-    String cluster;
-    String login;
-    String row;
-    Integer number;
+    private String campus;
+    private String cluster;
+    private String login;
+    private String row;
+    private Integer number;
 
 }

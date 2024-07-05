@@ -5,8 +5,8 @@ import lombok.Data;
 @Data
 public class WorkplaceDto {
 
-    String row;
-    Integer number;
-    String login;
+    private String row;
+    private Integer number;
+    private String login;
 
 }

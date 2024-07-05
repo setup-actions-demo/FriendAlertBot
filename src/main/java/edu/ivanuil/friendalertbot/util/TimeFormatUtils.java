@@ -16,11 +16,11 @@ public class TimeFormatUtils {
         return String.format("%02d:%02d:%02d.%03d", hr, min, sec, ms);
     }
 
-    public static String formatInterval(Timestamp end, Timestamp start) {
+    public static String formatInterval(final Timestamp end, final Timestamp start) {
         return formatInterval(end.getTime() - start.getTime());
     }
 
-    public static String formatIntervalFromNow(Timestamp start) {
+    public static String formatIntervalFromNow(final Timestamp start) {
         return formatInterval(new Timestamp(System.currentTimeMillis()), start);
     }
 
