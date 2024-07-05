@@ -6,11 +6,11 @@ public class ClickHouseClientException extends RuntimeException {
         super();
     }
 
-    public ClickHouseClientException(String message) {
+    public ClickHouseClientException(final String message) {
         super(message);
     }
 
-    public ClickHouseClientException(Throwable cause) {
+    public ClickHouseClientException(final Throwable cause) {
         super(cause);
     }
 

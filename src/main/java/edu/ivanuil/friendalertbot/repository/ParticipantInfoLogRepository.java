@@ -1,6 +1,11 @@
 package edu.ivanuil.friendalertbot.repository;
 
-import com.clickhouse.client.*;
+import com.clickhouse.client.ClickHouseNode;
+import com.clickhouse.client.ClickHouseCredentials;
+import com.clickhouse.client.ClickHouseClient;
+import com.clickhouse.client.ClickHouseProtocol;
+import com.clickhouse.client.ClickHouseException;
+import com.clickhouse.client.ClickHouseResponse;
 import com.clickhouse.data.ClickHouseFormat;
 import edu.ivanuil.friendalertbot.entity.ParticipantEntity;
 import edu.ivanuil.friendalertbot.exception.ClickHouseClientException;
@@ -26,7 +31,7 @@ public class ParticipantInfoLogRepository {
                      .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
                      .query("""
                         CREATE TABLE IF NOT EXISTS participant_info_log (
-                            login VARCHAR PRIMARY KEY,
+                            login VARCHAR,
                             class_name VARCHAR,
                             parallel_name VARCHAR,
                             exp_value INTEGER,
@@ -34,7 +39,9 @@ public class ParticipantInfoLogRepository {
                             exp_to_next_level INTEGER,
                             campus VARCHAR,
                             status VARCHAR,
-                            updated_at TIMESTAMP);
+                            updated_at TIMESTAMP)
+                        ENGINE MergeTree
+                        PRIMARY KEY (login);
                         """)
                      .executeAndWait()) {
             log.info("Created participant_info_log table in ClickHouse");
@@ -43,7 +50,7 @@ public class ParticipantInfoLogRepository {
         }
     }
 
-    public void appendParticipantInfoLog(ParticipantEntity entity) {
+    public void appendParticipantInfoLog(final ParticipantEntity entity) {
         try (ClickHouseClient client = ClickHouseClient.newInstance(credentials, ClickHouseProtocol.HTTP);
              ClickHouseResponse response = client.write(node)
                      .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)

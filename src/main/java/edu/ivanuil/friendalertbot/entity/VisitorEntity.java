@@ -1,6 +1,13 @@
 package edu.ivanuil.friendalertbot.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.Id;
+import jakarta.persistence.Column;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -27,7 +34,7 @@ public class VisitorEntity {
     private Integer number;
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (!(o instanceof VisitorEntity visitor)) return false;
         return Objects.equals(login, visitor.login);
@@ -42,4 +49,5 @@ public class VisitorEntity {
     public String toString() {
         return login;
     }
+
 }

@@ -1,6 +1,12 @@
 package edu.ivanuil.friendalertbot.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.Id;
+import jakarta.persistence.Column;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.OneToMany;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -36,7 +42,7 @@ public class ChatEntity {
     private Set<SubscriptionEntity> friendSubscriptions = new LinkedHashSet<>();
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (!(o instanceof ChatEntity that)) return false;
         return Objects.equals(id, that.id);

@@ -1,6 +1,16 @@
 package edu.ivanuil.friendalertbot.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.Id;
+import jakarta.persistence.Column;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.SequenceGenerator;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,7 +26,8 @@ public class SubscriptionEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "friend_subscription_id_gen")
-    @SequenceGenerator(name = "friend_subscription_id_gen", sequenceName = "friend_subscription_sequence", allocationSize = 1)
+    @SequenceGenerator(name = "friend_subscription_id_gen",
+            sequenceName = "friend_subscription_sequence", allocationSize = 1)
     @Column(name = "id", nullable = false)
     private Integer id;
 

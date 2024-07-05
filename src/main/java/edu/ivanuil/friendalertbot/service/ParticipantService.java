@@ -29,19 +29,19 @@ public class ParticipantService {
     private final ParticipantInfoLogRepository participantLogRepository;
 
     @Value("${s21.participants.page-size}")
-    private int PAGE_SIZE;
+    private int pageSize;
     @Value("${s21.participants.obsolescence-time}")
-    private long REFRESH_INTERVAL;
+    private long refreshInterval;
 
     public void refreshAll() {
         campusRepository.findAll().forEach(this::refreshForCampus);
     }
 
-    public void refreshForCampus(CampusEntity campus) {
+    public void refreshForCampus(final CampusEntity campus) {
         int start = 0;
         int count = Integer.MAX_VALUE;
         while (count != 0) {
-            var participants = platformBinding.getParticipantList(campus.getId(), PAGE_SIZE, start).getParticipants();
+            var participants = platformBinding.getParticipantList(campus.getId(), pageSize, start).getParticipants();
             start += participants.length;
             count = participants.length;
             log.info("Retrieved {} participants for campus '{}'", count, campus.getName());
@@ -60,7 +60,7 @@ public class ParticipantService {
 
     public void getParticipantsInfo() {
         var participants = participantRepository.getAllByStatusNullOrUpdatedAtLessThan(
-                new Timestamp(System.currentTimeMillis() - REFRESH_INTERVAL));
+                new Timestamp(System.currentTimeMillis() - refreshInterval));
 
         Timestamp operationsStart = new Timestamp(System.currentTimeMillis());
         for (var participant : participants) {

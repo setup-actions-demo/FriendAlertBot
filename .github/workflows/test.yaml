@@ -1,0 +1,62 @@
+name: Test
+
+on:
+  pull_request:
+    branches:
+      - '*'
+  push:
+    branches:
+      - 'master'
+
+jobs:
+
+  build:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: set up JDK 17
+        uses: actions/setup-java@v4.2.0
+        with:
+          distribution: 'oracle'
+          java-version: 17
+          check-latest: false
+          cache: 'maven'
+      - name: Maven Verify
+        run: mvn clean compile
+
+  codestyle:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - name: set up JDK 17
+        uses: actions/setup-java@v4.2.0
+        with:
+          distribution: 'oracle'
+          java-version: 17
+          check-latest: false
+          cache: 'maven'
+      - name: Maven Verify
+        run: mvn checkstyle:check
+
+  test-run:
+    runs-on: self-hosted
+    needs:
+      - build
+      - codestyle
+    env:
+      S21_USERNAME: ${{ secrets.S21PLATFORM_USERNAME }}
+      S21_PASSWORD: ${{ secrets.S21PLATFORM_PASSWORD }}
+      TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: set up JDK 17
+        uses: actions/setup-java@v4.2.0
+        with:
+          distribution: 'oracle'
+          java-version: 17
+          check-latest: false
+          cache: 'maven'
+      - name: Maven Verify
+        run: mvn -Dschool21.platform.username=${{ secrets.S21PLATFORM_USERNAME }} -Dschool21.platform.password=${{ secrets.S21PLATFORM_PASSWORD }} -Dtelegram.bot.token=${{ secrets.TELEGRAM_TOKEN }} -B clean verify

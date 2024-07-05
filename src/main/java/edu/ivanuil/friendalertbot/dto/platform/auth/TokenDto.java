@@ -7,26 +7,26 @@ import lombok.Data;
 public class TokenDto {
 
     @JsonProperty("access_token")
-    String accessToken;
+    private String accessToken;
 
     @JsonProperty("expires_in")
-    Integer expiresIn;
+    private Integer expiresIn;
 
     @JsonProperty("refresh_expires_in")
-    Integer refreshExpiresIn;
+    private Integer refreshExpiresIn;
 
     @JsonProperty("refresh_token")
-    String refreshToken;
+    private String refreshToken;
 
     @JsonProperty("token_type")
-    String tokenType;
+    private String tokenType;
 
     @JsonProperty("before")
-    Integer nonBeforePolicy;
+    private Integer nonBeforePolicy;
 
     @JsonProperty("session_state")
-    String sessionState;
+    private String sessionState;
 
-    String scope;
+    private String scope;
 
 }

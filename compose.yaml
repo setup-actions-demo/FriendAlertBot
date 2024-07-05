@@ -20,12 +20,12 @@ services:
       retries: 5
 
   clickhouse:
-    image: bitnami/clickhouse:latest
+    image: clickhouse/clickhouse-server:23.3.8.21-alpine
     volumes:
       - clickhouse-data:/bitnami/clickhouse
     environment:
-      - CLICKHOUSE_ADMIN_USER=clickhouse
-      - CLICKHOUSE_ADMIN_PASSWORD=clickhouse
+      - CLICKHOUSE_USER=clickhouse
+      - CLICKHOUSE_PASSWORD=clickhouse
     ports:
       - "8123:8123"
 
