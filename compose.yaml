@@ -7,7 +7,7 @@ services:
     restart: always
     user: postgres
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -19,5 +19,18 @@ services:
       timeout: 5s
       retries: 5
 
+  clickhouse:
+    image: bitnami/clickhouse:latest
+    volumes:
+      - clickhouse-data:/bitnami/clickhouse
+    environment:
+      - CLICKHOUSE_ADMIN_USER=clickhouse
+      - CLICKHOUSE_ADMIN_PASSWORD=clickhouse
+    ports:
+      - "8123:8123"
+
 volumes:
-  db-data:
+  postgres-data:
+    name: "Postgres_data"
+  clickhouse-data:
+    name: "ClickHouse_data"

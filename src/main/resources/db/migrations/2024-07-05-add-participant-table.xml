@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="2024-07-05-add-participant-table" author="ivanuil">
+
+        <createTable tableName="participant">
+            <column name="login" type="VARCHAR">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="class_name" type="VARCHAR"/>
+            <column name="parallel_name" type="VARCHAR"/>
+            <column name="exp_value" type="INTEGER"/>
+            <column name="level" type="INTEGER"/>
+            <column name="exp_to_next_level" type="INTEGER"/>
+            <column name="campus" type="VARCHAR"/>
+            <column name="status" type="VARCHAR"/>
+            <column name="updated_at" type="TIMESTAMP"/>
+        </createTable>
+
+    </changeSet>
+
+</databaseChangeLog>
