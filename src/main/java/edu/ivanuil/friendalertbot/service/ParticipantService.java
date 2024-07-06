@@ -61,6 +61,9 @@ public class ParticipantService {
     public void getParticipantsInfo() {
         var participants = participantRepository.getAllByStatusNullOrUpdatedAtLessThan(
                 new Timestamp(System.currentTimeMillis() - refreshInterval));
+        if (participants.isEmpty())
+            return;
+        log.info("{} participants have no user info or require refreshing", participants.size());
 
         Timestamp operationsStart = new Timestamp(System.currentTimeMillis());
         for (var participant : participants) {

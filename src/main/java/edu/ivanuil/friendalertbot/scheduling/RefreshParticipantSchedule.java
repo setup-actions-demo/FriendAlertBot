@@ -14,9 +14,9 @@ public class RefreshParticipantSchedule {
 
     private final ParticipantService participantService;
 
-    @Scheduled(fixedDelay = 3_600_000) // One every 1 hour
+    @Scheduled(fixedDelay = 3_600_000, initialDelay = 3_000) // One every 1 hour
     @Async("jobPool")
-    public void test() {
+    public void refreshParticipantInfo() {
         log.info("Start retrieving participants info");
         participantService.refreshAll();
     }
