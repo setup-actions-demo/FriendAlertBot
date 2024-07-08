@@ -1,15 +1,29 @@
 ## Friend Alert Bot
 
-### About
+This repository is a part of FriendAlert project.
+Root repository of FriendAlert project: https://github.com/Ivanuil/FriendAlert
+
+### About project
 
 Friend Alert is a Telegram bot, made for School 21 students.
-It allows users to subscribe for their friends.
-If user is subscribed to someone, they will get a notification when their friend enters or leaves School 21.
+It allows users to subscribe for their friends entering and leaving campus.
+It also provides extensive statistics on School 21 campuses and participants.
+
+Project includes two microservices:
+1. FriendAlertBot (java) ← **This repository**
+
+   FriendAlertBot gathers data from School 21 platform and sends out messages for users.
+   It also logs data for analytics.
+
+2. FriendAlertAnalytics (python)
+
+   FriendAlertAnalytics provides analytics data visualisation
 
 ### Stack
 
 - Spring Boot
 - Hibernate + Liquibase + PostgreSQL
+- ClickHouse + ClickHouseHttpClient
 - JUnit + TestContainers
 
 ### How to run
