@@ -13,7 +13,7 @@ public class SchedulingConfiguration {
     public Executor jobPool() {
         ThreadPoolTaskExecutor exec = new ThreadPoolTaskExecutor();
         exec.setCorePoolSize(3);
-        exec.setMaxPoolSize(3);
+        exec.setMaxPoolSize(4);
         exec.setQueueCapacity(0);
         exec.setThreadNamePrefix("scheduling-");
         exec.initialize();

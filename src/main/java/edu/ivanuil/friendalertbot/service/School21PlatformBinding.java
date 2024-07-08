@@ -11,6 +11,7 @@ import edu.ivanuil.friendalertbot.dto.platform.ParticipantsListDto;
 import edu.ivanuil.friendalertbot.dto.platform.CampusesDto;
 import edu.ivanuil.friendalertbot.dto.platform.ClustersDto;
 import edu.ivanuil.friendalertbot.dto.platform.ClusterMapDto;
+import edu.ivanuil.friendalertbot.util.RequestRateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -53,6 +54,7 @@ public class School21PlatformBinding {
     private String password;
 
     private String token;
+    private final RequestRateUtil requestRate = new RequestRateUtil();
 
     private HttpEntity<Void> getRequestEntity() {
         if (token == null || token.isEmpty())
@@ -83,11 +85,16 @@ public class School21PlatformBinding {
         log.info("School21 platform authorised");
     }
 
+    public double getRequestRatePerSecond() {
+        return requestRate.getRatePerSecondAndReset();
+    }
+
     @Retryable(retryFor = HttpRequestsException.class, maxAttempts = 5, backoff = @Backoff(delay = 1000))
     public CampusDto[] getCampuses() {
         try {
             ResponseEntity<CampusesDto> response = restTemplate.exchange(
                     GET_CAMPUSES_URL, HttpMethod.GET, getRequestEntity(), CampusesDto.class);
+            requestRate.incrementRequestCount();
             return response.getBody().getCampuses();
         } catch (HttpClientErrorException.Forbidden | HttpClientErrorException.Unauthorized e) {
             authorise();
@@ -102,6 +109,7 @@ public class School21PlatformBinding {
         try {
             ResponseEntity<ClustersDto> response = restTemplate.exchange(
                     String.format(GET_CLUSTERS_URL, campusId), HttpMethod.GET, getRequestEntity(), ClustersDto.class);
+            requestRate.incrementRequestCount();
             return response.getBody().getClusters();
         } catch (HttpClientErrorException.Forbidden | HttpClientErrorException.Unauthorized e) {
             authorise();
@@ -117,6 +125,7 @@ public class School21PlatformBinding {
             ResponseEntity<ClusterMapDto> response = restTemplate.exchange(
                     String.format(GET_CLUSTER_VISITORS_URL, clusterId), HttpMethod.GET,
                     getRequestEntity(), ClusterMapDto.class);
+            requestRate.incrementRequestCount();
             return response.getBody().getClusterMap();
         } catch (HttpClientErrorException.Forbidden | HttpClientErrorException.Unauthorized e) {
             authorise();
@@ -132,6 +141,7 @@ public class School21PlatformBinding {
             ResponseEntity<?> response = restTemplate.exchange(
                     String.format(GET_USER_INFO_URL, username), HttpMethod.GET,
                     getRequestEntity(), ParticipantDto.class);
+            requestRate.incrementRequestCount();
             return true;
         } catch (HttpClientErrorException.Forbidden | HttpClientErrorException.Unauthorized e) {
             authorise();
@@ -149,6 +159,7 @@ public class School21PlatformBinding {
             ResponseEntity<ParticipantDto> response = restTemplate.exchange(
                     String.format(GET_USER_INFO_URL, login), HttpMethod.GET,
                     getRequestEntity(), ParticipantDto.class);
+            requestRate.incrementRequestCount();
             return response.getBody();
         } catch (HttpClientErrorException.Unauthorized e) {
             authorise();
@@ -167,6 +178,7 @@ public class School21PlatformBinding {
             ResponseEntity<ParticipantsListDto> response = restTemplate.exchange(
                     String.format(GET_PARTICIPANT_LIST_URL, campusId, limit, offset), HttpMethod.GET,
                     getRequestEntity(), ParticipantsListDto.class);
+            requestRate.incrementRequestCount();
             return response.getBody();
         } catch (HttpClientErrorException.Forbidden | HttpClientErrorException.Unauthorized e) {
             authorise();
