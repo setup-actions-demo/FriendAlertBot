@@ -99,7 +99,7 @@ public class ParticipantService {
                 formatIntervalFromNow(operationsStart));
     }
 
-    private void saveBatch(Collection<ParticipantEntity> participants) {
+    private void saveBatch(final Collection<ParticipantEntity> participants) {
         if (participants.isEmpty())
             return;
 

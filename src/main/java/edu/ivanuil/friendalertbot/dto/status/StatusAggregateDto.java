@@ -5,6 +5,6 @@ import lombok.Data;
 @Data
 public class StatusAggregateDto {
 
-    Object[] statuses;
+    private Object[] statuses;
 
 }
