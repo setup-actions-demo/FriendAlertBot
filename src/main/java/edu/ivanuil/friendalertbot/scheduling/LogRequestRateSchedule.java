@@ -18,7 +18,7 @@ public class LogRequestRateSchedule {
     @Async("jobPool")
     public void refreshBotMessages() {
         log.info("S21 platform request rate: {} per second",
-                String.format("%.2f", platformBinding.getRequestRatePerSecond()));
+                String.format("%.2f", platformBinding.getRequestRatePerSecondAndReset()));
     }
 
 }

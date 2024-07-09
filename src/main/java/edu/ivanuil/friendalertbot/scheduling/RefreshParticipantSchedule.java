@@ -19,6 +19,7 @@ public class RefreshParticipantSchedule {
     public void refreshParticipantInfo() {
         log.info("Start retrieving participants info");
         participantService.refreshAll();
+        log.info("Finished retrieving participants info");
     }
 
 }

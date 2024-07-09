@@ -12,6 +12,7 @@ import edu.ivanuil.friendalertbot.dto.platform.CampusesDto;
 import edu.ivanuil.friendalertbot.dto.platform.ClustersDto;
 import edu.ivanuil.friendalertbot.dto.platform.ClusterMapDto;
 import edu.ivanuil.friendalertbot.util.RequestRateUtil;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -49,6 +50,7 @@ public class School21PlatformBinding {
             "https://edu-api.21-school.ru/services/21-school/api/v1/campuses/%s/participants?limit=%d&offset=%d";
 
     @Value("${school21.platform.username}")
+    @Getter
     private String username;
     @Value("${school21.platform.password}")
     private String password;
@@ -86,6 +88,10 @@ public class School21PlatformBinding {
     }
 
     public double getRequestRatePerSecond() {
+        return requestRate.getRatePerSecond();
+    }
+
+    public double getRequestRatePerSecondAndReset() {
         return requestRate.getRatePerSecondAndReset();
     }
 

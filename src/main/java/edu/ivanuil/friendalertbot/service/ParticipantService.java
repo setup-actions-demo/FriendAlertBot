@@ -7,17 +7,22 @@ import edu.ivanuil.friendalertbot.mapper.ParticipantMapper;
 import edu.ivanuil.friendalertbot.repository.CampusRepository;
 import edu.ivanuil.friendalertbot.repository.ParticipantInfoLogRepository;
 import edu.ivanuil.friendalertbot.repository.ParticipantRepository;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import static edu.ivanuil.friendalertbot.util.TimeFormatUtils.formatIntervalFromNow;
 
 @Service
 @Slf4j
+@Getter
 @RequiredArgsConstructor
 public class ParticipantService {
 
@@ -32,9 +37,18 @@ public class ParticipantService {
     private int pageSize;
     @Value("${s21.participants.obsolescence-time}")
     private long refreshInterval;
+    @Value("${s21.participants.batch-max-size}")
+    private int participantBatchMaxSize = 1000;
+
+    private boolean isWorking = false;
+    private final Set<ParticipantEntity> participantBatch = new HashSet<>();
+    private int participantListSizeInThisIteration = 0;
 
     public void refreshAll() {
+        participantListSizeInThisIteration = 0;
+        isWorking = true;
         campusRepository.findAll().forEach(this::refreshForCampus);
+        isWorking = false;
     }
 
     public void refreshForCampus(final CampusEntity campus) {
@@ -44,6 +58,7 @@ public class ParticipantService {
             var participants = platformBinding.getParticipantList(campus.getId(), pageSize, start).getParticipants();
             start += participants.length;
             count = participants.length;
+            participantListSizeInThisIteration += participants.length;
             log.info("Retrieved {} participants for campus '{}'", count, campus.getName());
 
             for (var participant : participants) {
@@ -70,15 +85,29 @@ public class ParticipantService {
             try {
                 var participantDto = platformBinding.getUserInfo(participant.getLogin());
                 var participantEntity = participantMapper.toParticipantEntity(participantDto);
-                participantRepository.save(participantEntity);
-                participantLogRepository.appendParticipantInfoLog(participantEntity);
+                participantBatch.add(participantEntity);
             } catch (EntityNotFoundException e) {
                 log.warn("Participant {} not found", participant.getLogin());
                 participantRepository.deleteById(participant.getLogin());
             }
+            if (participantBatch.size() >= participantBatchMaxSize) {
+                saveBatch(participantBatch);
+            }
         }
+        saveBatch(participantBatch);
         log.info("Retrieved info for {} participants in {}", participants.size(),
                 formatIntervalFromNow(operationsStart));
+    }
+
+    private void saveBatch(Collection<ParticipantEntity> participants) {
+        if (participants.isEmpty())
+            return;
+
+        participants.forEach(entity -> entity.setUpdatedAt(new Timestamp(System.currentTimeMillis())));
+        participantRepository.saveAll(participants);
+        participantLogRepository.appendParticipantInfoLog(participants);
+        log.info("Saved participant info batch ({} rows)", participants.size());
+        participants.clear();
     }
 
 }
