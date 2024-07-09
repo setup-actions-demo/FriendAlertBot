@@ -2,7 +2,7 @@ package edu.ivanuil.friendalertbot.service;
 
 import edu.ivanuil.friendalertbot.dto.platform.auth.TokenDto;
 import edu.ivanuil.friendalertbot.exception.EntityNotFoundException;
-import edu.ivanuil.friendalertbot.exception.TooManyRequestsException;
+import edu.ivanuil.friendalertbot.exception.HttpRequestsException;
 import edu.ivanuil.friendalertbot.dto.platform.CampusDto;
 import edu.ivanuil.friendalertbot.dto.platform.ClusterDto;
 import edu.ivanuil.friendalertbot.dto.platform.WorkplaceDto;
@@ -11,6 +11,8 @@ import edu.ivanuil.friendalertbot.dto.platform.ParticipantsListDto;
 import edu.ivanuil.friendalertbot.dto.platform.CampusesDto;
 import edu.ivanuil.friendalertbot.dto.platform.ClustersDto;
 import edu.ivanuil.friendalertbot.dto.platform.ClusterMapDto;
+import edu.ivanuil.friendalertbot.util.RequestRateUtil;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -48,20 +50,25 @@ public class School21PlatformBinding {
             "https://edu-api.21-school.ru/services/21-school/api/v1/campuses/%s/participants?limit=%d&offset=%d";
 
     @Value("${school21.platform.username}")
+    @Getter
     private String username;
     @Value("${school21.platform.password}")
     private String password;
 
     private String token;
+    private final RequestRateUtil requestRate = new RequestRateUtil();
 
     private HttpEntity<Void> getRequestEntity() {
+        if (token == null || token.isEmpty())
+            authorise();
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("Authorization", token);
         return new HttpEntity<>(headers);
     }
 
-    public void authorise() {
+    public synchronized void authorise() {
         log.info("School21 platform token not found or obsolete, attempting to authorise");
 
         HttpHeaders headers = new HttpHeaders();
@@ -80,108 +87,110 @@ public class School21PlatformBinding {
         log.info("School21 platform authorised");
     }
 
-    @Retryable(retryFor = TooManyRequestsException.class, maxAttempts = 5, backoff = @Backoff(delay = 1000))
-    public CampusDto[] getCampuses() {
-        if (token == null || token.isEmpty())
-            authorise();
+    public double getRequestRatePerSecond() {
+        return requestRate.getRatePerSecond();
+    }
 
+    public double getRequestRatePerSecondAndReset() {
+        return requestRate.getRatePerSecondAndReset();
+    }
+
+    @Retryable(retryFor = HttpRequestsException.class, maxAttempts = 5, backoff = @Backoff(delay = 1000))
+    public CampusDto[] getCampuses() {
         try {
             ResponseEntity<CampusesDto> response = restTemplate.exchange(
                     GET_CAMPUSES_URL, HttpMethod.GET, getRequestEntity(), CampusesDto.class);
+            requestRate.incrementRequestCount();
             return response.getBody().getCampuses();
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("401"))
-                authorise();
-            throw new TooManyRequestsException(e);
+        } catch (HttpClientErrorException.Forbidden | HttpClientErrorException.Unauthorized e) {
+            authorise();
+            throw new HttpRequestsException(e);
+        } catch (HttpClientErrorException.TooManyRequests e) {
+            throw new HttpRequestsException(e);
         }
     }
 
-    @Retryable(retryFor = TooManyRequestsException.class, maxAttempts = 5, backoff = @Backoff(delay = 1000))
+    @Retryable(retryFor = HttpRequestsException.class, maxAttempts = 5, backoff = @Backoff(delay = 1000))
     public ClusterDto[] getClusters(final UUID campusId) {
-        if (token == null || token.isEmpty())
-            authorise();
-
         try {
             ResponseEntity<ClustersDto> response = restTemplate.exchange(
                     String.format(GET_CLUSTERS_URL, campusId), HttpMethod.GET, getRequestEntity(), ClustersDto.class);
+            requestRate.incrementRequestCount();
             return response.getBody().getClusters();
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("401"))
-                authorise();
-            throw new TooManyRequestsException(e);
+        } catch (HttpClientErrorException.Forbidden | HttpClientErrorException.Unauthorized e) {
+            authorise();
+            throw new HttpRequestsException(e);
+        } catch (HttpClientErrorException.TooManyRequests e) {
+            throw new HttpRequestsException(e);
         }
     }
 
-    @Retryable(retryFor = TooManyRequestsException.class, maxAttempts = 5, backoff = @Backoff(delay = 1500))
+    @Retryable(retryFor = HttpRequestsException.class, maxAttempts = 5, backoff = @Backoff(delay = 1500))
     public WorkplaceDto[] getClusterVisitors(final Integer clusterId) {
-        if (token == null || token.isEmpty())
-            authorise();
-
         try {
             ResponseEntity<ClusterMapDto> response = restTemplate.exchange(
                     String.format(GET_CLUSTER_VISITORS_URL, clusterId), HttpMethod.GET,
                     getRequestEntity(), ClusterMapDto.class);
+            requestRate.incrementRequestCount();
             return response.getBody().getClusterMap();
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("401"))
-                authorise();
-            throw new TooManyRequestsException(e);
+        } catch (HttpClientErrorException.Forbidden | HttpClientErrorException.Unauthorized e) {
+            authorise();
+            throw new HttpRequestsException(e);
+        } catch (HttpClientErrorException.TooManyRequests e) {
+            throw new HttpRequestsException(e);
         }
     }
 
-    @Retryable(retryFor = TooManyRequestsException.class, maxAttempts = 5, backoff = @Backoff(delay = 1000))
+    @Retryable(retryFor = HttpRequestsException.class, maxAttempts = 5, backoff = @Backoff(delay = 1000))
     public boolean checkIfUserExists(final String username) {
-        if (token == null || token.isEmpty())
-            authorise();
-
         try {
             ResponseEntity<?> response = restTemplate.exchange(
                     String.format(GET_USER_INFO_URL, username), HttpMethod.GET,
                     getRequestEntity(), ParticipantDto.class);
+            requestRate.incrementRequestCount();
             return true;
-        } catch (HttpClientErrorException e) {
-            if (e.getMessage().contains("401"))
-                authorise();
-            if (e.getMessage().contains("404"))
-                return false;
-            else
-                throw new TooManyRequestsException(e);
+        } catch (HttpClientErrorException.Forbidden | HttpClientErrorException.Unauthorized e) {
+            authorise();
+            throw new HttpRequestsException(e);
+        } catch (HttpClientErrorException.TooManyRequests e) {
+            throw new HttpRequestsException(e);
+        } catch (HttpClientErrorException.NotFound e) {
+            return false;
         }
     }
 
-    @Retryable(retryFor = TooManyRequestsException.class, maxAttempts = 5, backoff = @Backoff(delay = 1000))
+    @Retryable(retryFor = HttpRequestsException.class, maxAttempts = 5, backoff = @Backoff(delay = 1000))
     public ParticipantDto getUserInfo(final String login) throws EntityNotFoundException {
-        if (token == null || token.isEmpty())
-            authorise();
-
         try {
             ResponseEntity<ParticipantDto> response = restTemplate.exchange(
                     String.format(GET_USER_INFO_URL, login), HttpMethod.GET,
                     getRequestEntity(), ParticipantDto.class);
+            requestRate.incrementRequestCount();
             return response.getBody();
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("401") || e.getMessage().contains("403"))
-                authorise();
-            if (e.getMessage().contains("404"))
-                throw new EntityNotFoundException();
-            throw new TooManyRequestsException(e);
+        } catch (HttpClientErrorException.Unauthorized e) {
+            authorise();
+            throw new HttpRequestsException(e);
+        } catch (HttpClientErrorException.TooManyRequests e) {
+            throw new HttpRequestsException(e);
+        } catch (HttpClientErrorException.NotFound | HttpClientErrorException.Forbidden e) {
+            log.warn("Unexpected error while fetching user info for {}", login, e);
+            throw new EntityNotFoundException();
         }
     }
 
-    @Retryable(retryFor = TooManyRequestsException.class, maxAttempts = 5, backoff = @Backoff(delay = 1000))
+    @Retryable(retryFor = HttpRequestsException.class, maxAttempts = 5, backoff = @Backoff(delay = 1000))
     public ParticipantsListDto getParticipantList(final UUID campusId, final int limit, final int offset) {
-        if (token == null || token.isEmpty())
-            authorise();
-
         try {
             ResponseEntity<ParticipantsListDto> response = restTemplate.exchange(
                     String.format(GET_PARTICIPANT_LIST_URL, campusId, limit, offset), HttpMethod.GET,
                     getRequestEntity(), ParticipantsListDto.class);
+            requestRate.incrementRequestCount();
             return response.getBody();
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("401"))
-                authorise();
-            throw new TooManyRequestsException(e);
+        } catch (HttpClientErrorException.Forbidden | HttpClientErrorException.Unauthorized e) {
+            authorise();
+            throw new HttpRequestsException(e);
+        } catch (HttpClientErrorException.TooManyRequests e) {
+            throw new HttpRequestsException(e);
         }
     }
 

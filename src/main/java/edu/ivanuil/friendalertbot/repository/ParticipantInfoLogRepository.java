@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.sql.Timestamp;
+import java.util.Collection;
 
 @Component
 @Slf4j
@@ -50,31 +50,36 @@ public class ParticipantInfoLogRepository {
         }
     }
 
-    public void appendParticipantInfoLog(final ParticipantEntity entity) {
+    public void appendParticipantInfoLog(final Collection<ParticipantEntity> participants) {
         try (ClickHouseClient client = ClickHouseClient.newInstance(credentials, ClickHouseProtocol.HTTP);
              ClickHouseResponse response = client.write(node)
                      .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
-                     .query("""
-                            INSERT INTO participant_info_log (
-                                login, class_name, parallel_name,
-                                exp_value, level, exp_to_next_level,
-                                campus, status,
-                                updated_at)
-                            VALUES (:login, :class_name, :parallel_name,
-                                :exp_value, :level, :exp_to_next_level,
-                                :campus, :status,
-                                FROM_UNIXTIME(:updated_at));
-                            """)
-                     .params(entity.getLogin(), entity.getClassName(), entity.getParallelName(),
-                             entity.getExpValue(), entity.getLevel(), entity.getExpToNextLevel(),
-                             entity.getCampus(), entity.getStatus(),
-                             new Timestamp(System.currentTimeMillis()).getTime() / 1000L)
+                     .query(getRequest(participants))
                      .executeAndWait()) {
-            if (response.getSummary().getWrittenRows() != 1)
+            if (response.getSummary().getWrittenRows() != participants.size())
                 throw new ClickHouseClientException("Error writing to participant_info_log table");
         } catch (ClickHouseException e) {
             throw new ClickHouseClientException(e);
         }
+    }
+
+    private static String getRequest(final Collection<ParticipantEntity> participants) {
+        StringBuilder builder = new StringBuilder("""
+                INSERT INTO participant_info_log (
+                    login, class_name, parallel_name,
+                    exp_value, level, exp_to_next_level,
+                    campus, status,
+                    updated_at)
+                VALUES
+                """);
+        participants.forEach(entity -> builder.append(String.format(
+                "('%s', '%s', '%s', %d, %d, %d, '%s', '%s', FROM_UNIXTIME(%d)),\n",
+                entity.getLogin(), entity.getClassName(), entity.getParallelName(),
+                entity.getExpValue(), entity.getLevel(), entity.getExpToNextLevel(),
+                entity.getCampus(), entity.getStatus(), entity.getUpdatedAt().getTime() / 1000L)));
+        builder.deleteCharAt(builder.length() - 1);
+        builder.append(";");
+        return builder.toString();
     }
 
 }
