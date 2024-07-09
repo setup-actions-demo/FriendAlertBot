@@ -26,9 +26,24 @@ Project includes two microservices:
 - ClickHouse + ClickHouseHttpClient
 - JUnit + TestContainers
 
-### How to run
+### How to run locally
 
-1. Add `school21.platform.token` property in `Bearer abc123` format
-2. Add `telegram.bot.token` property in `avc:abc` format
-3. Run PostgreSQL (`docker compose up` in project root directory)
-4. Run `FriendAlertBotApplication.class`
+1. In file [application-auth.properties](src/main/resources/application-auth.properties)
+specify School 21 platform credentials and Telegram bot token. 
+You might want to run the following script to prevent git from commiting this file:
+   ```bash
+   git update-index --skip-worktree -- src/main/resources/application-auth.properties
+   ```
+2. Run PostgreSQL and ClickHouse:
+   ```bash
+   docker compose up postgres clickhouse -d
+   ```
+3. Run [FriendAlertBotApplication.java](src/main/java/edu/ivanuil/friendalertbot/FriendAlertBotApplication.java)
+
+### How to run as a Docker container
+
+1. Repeat step 1 from **_How to run locally_**
+2. Run docker compose:
+   ```bash
+   docker compose up -d
+   ```
