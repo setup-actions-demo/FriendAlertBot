@@ -2,11 +2,11 @@ package edu.ivanuil.friendalertbot.exception;
 
 public class ClickHouseMigrationsException extends Exception {
 
-    public ClickHouseMigrationsException(String message) {
+    public ClickHouseMigrationsException(final String message) {
         super(message);
     }
 
-    public ClickHouseMigrationsException(String message, Throwable cause) {
+    public ClickHouseMigrationsException(final String message, final Throwable cause) {
         super(message, cause);
     }
 

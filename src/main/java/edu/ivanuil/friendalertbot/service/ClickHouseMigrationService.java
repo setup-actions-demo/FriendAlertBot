@@ -1,6 +1,10 @@
 package edu.ivanuil.friendalertbot.service;
 
-import com.clickhouse.client.*;
+import com.clickhouse.client.ClickHouseNode;
+import com.clickhouse.client.ClickHouseCredentials;
+import com.clickhouse.client.ClickHouseClient;
+import com.clickhouse.client.ClickHouseProtocol;
+import com.clickhouse.client.ClickHouseException;
 import com.clickhouse.data.ClickHouseFormat;
 import edu.ivanuil.friendalertbot.dto.ClickHouseMigration;
 import edu.ivanuil.friendalertbot.exception.ClickHouseMigrationsException;
@@ -17,7 +21,10 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.List;
+import java.util.Comparator;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -123,7 +130,7 @@ public class ClickHouseMigrationService {
         }
     }
 
-    private void applyAndSaveMigration(ClickHouseMigration migration) throws ClickHouseMigrationsException {
+    private void applyAndSaveMigration(final ClickHouseMigration migration) throws ClickHouseMigrationsException {
         try (ClickHouseClient client = ClickHouseClient.newInstance(credentials, ClickHouseProtocol.HTTP);
              var ignored = client.read(node).write()
                      .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
@@ -152,7 +159,7 @@ public class ClickHouseMigrationService {
         }
     }
 
-    private static List<ClickHouseMigration> mapFilesToMigrations(File[] migrationFiles) {
+    private static List<ClickHouseMigration> mapFilesToMigrations(final File[] migrationFiles) {
         AtomicInteger count = new AtomicInteger(-1);
         return Arrays.stream(migrationFiles)
                 .map(file -> {

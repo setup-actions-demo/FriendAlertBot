@@ -9,6 +9,7 @@ import java.util.Objects;
 @Data
 @AllArgsConstructor
 public class ClickHouseMigration {
+
     private String name;
     private String filename;
     private LocalDateTime executedAt;
@@ -16,7 +17,7 @@ public class ClickHouseMigration {
     private String request;
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (!(o instanceof ClickHouseMigration that)) return false;
         return Objects.equals(order, that.order);
@@ -27,7 +28,7 @@ public class ClickHouseMigration {
         return Objects.hashCode(name);
     }
 
-    public boolean assertEquals(ClickHouseMigration migration) {
+    public boolean assertEquals(final ClickHouseMigration migration) {
         return
                 this.name.equals(migration.getName())
                         && this.getFilename().equals(migration.getFilename())
