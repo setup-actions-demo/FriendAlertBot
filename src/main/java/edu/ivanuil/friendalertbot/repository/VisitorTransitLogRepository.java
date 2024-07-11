@@ -1,11 +1,15 @@
 package edu.ivanuil.friendalertbot.repository;
 
-import com.clickhouse.client.*;
+import com.clickhouse.client.ClickHouseNode;
+import com.clickhouse.client.ClickHouseCredentials;
+import com.clickhouse.client.ClickHouseClient;
+import com.clickhouse.client.ClickHouseProtocol;
+import com.clickhouse.client.ClickHouseException;
+import com.clickhouse.client.ClickHouseResponse;
 import com.clickhouse.data.ClickHouseFormat;
 import edu.ivanuil.friendalertbot.dto.VisitorDto;
 import edu.ivanuil.friendalertbot.entity.TransitDirection;
 import edu.ivanuil.friendalertbot.exception.ClickHouseClientException;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.retry.annotation.Backoff;
@@ -21,29 +25,6 @@ public class VisitorTransitLogRepository {
 
     private final ClickHouseNode node;
     private final ClickHouseCredentials credentials;
-
-    @PostConstruct
-    public void createSchema() {
-        try (ClickHouseClient client = ClickHouseClient.newInstance(credentials, ClickHouseProtocol.HTTP);
-             var response = client.write(node)
-                     .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
-                     .query("""
-                        CREATE TABLE IF NOT EXISTS visitors_transit_log (
-                                     timestamp TIMESTAMP,
-                                     campus VARCHAR,
-                                     cluster VARCHAR,
-                                     place VARCHAR(2),
-                                     login VARCHAR,
-                                     direction VARCHAR)
-                        ENGINE MergeTree
-                        PRIMARY KEY (timestamp, login);
-                        """)
-                     .executeAndWait()) {
-            log.info("Created visitors_transit_log table in ClickHouse");
-        } catch (ClickHouseException e) {
-            throw new ClickHouseClientException(e);
-        }
-    }
 
     @Retryable(retryFor = ClickHouseClientException.class, maxAttempts = 2, backoff = @Backoff(delay = 100))
     public void appendVisitorsEnteringAndLeaving(final Map<VisitorDto, TransitDirection> visitors) {

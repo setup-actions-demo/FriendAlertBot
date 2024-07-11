@@ -5,6 +5,6 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-    <includeAll path="db/migrations/"/>
+    <includeAll path="db/postgres/migrations/"/>
 
 </databaseChangeLog>
