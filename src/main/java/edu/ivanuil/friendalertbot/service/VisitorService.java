@@ -9,10 +9,7 @@ import edu.ivanuil.friendalertbot.exception.ClickHouseClientException;
 import edu.ivanuil.friendalertbot.mapper.CampusMapper;
 import edu.ivanuil.friendalertbot.mapper.ClusterMapper;
 import edu.ivanuil.friendalertbot.mapper.VisitorMapper;
-import edu.ivanuil.friendalertbot.repository.VisitorLogRepository;
-import edu.ivanuil.friendalertbot.repository.CampusRepository;
-import edu.ivanuil.friendalertbot.repository.ClusterRepository;
-import edu.ivanuil.friendalertbot.repository.VisitorRepository;
+import edu.ivanuil.friendalertbot.repository.*;
 import edu.ivanuil.friendalertbot.service.bot.TelegramBotService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +37,8 @@ public class VisitorService {
     private final CampusRepository campusRepository;
     private final ClusterRepository clusterRepository;
     private final VisitorRepository visitorRepository;
-    private final VisitorLogRepository visitorLogRepository;
+    private final VisitorTransitLogRepository visitorTransitLogRepository;
+    private final VisitorCountLogRepository visitorCountLogRepository;
 
     private final CampusMapper campusMapper;
     private final ClusterMapper clusterMapper;
@@ -91,7 +89,7 @@ public class VisitorService {
     }
 
     private void logVisitorsCount(final CampusEntity campus, final ClusterEntity cluster, final int visitors) {
-        visitorLogRepository.appendVisitorsCountLog(campus.getName(), cluster.getName(), visitors);
+        visitorCountLogRepository.appendVisitorsCountLog(campus.getName(), cluster.getName(), visitors);
     }
 
     public void refreshCampusesAndClusters() {
@@ -146,7 +144,7 @@ public class VisitorService {
 
     private void logCommit() {
         try {
-            visitorLogRepository.appendVisitorsEnteringAndLeaving(visitorDirectionMap);
+            visitorTransitLogRepository.appendVisitorsEnteringAndLeaving(visitorDirectionMap);
         } catch (ClickHouseClientException e) {
             log.error("Logging entering and leaving visitors threw an exception", e);
         }
