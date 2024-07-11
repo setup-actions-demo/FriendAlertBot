@@ -6,8 +6,8 @@ public class ClickHouseMigrationsException extends Exception {
         super(message);
     }
 
-    public ClickHouseMigrationsException(Throwable cause) {
-        super(cause);
+    public ClickHouseMigrationsException(String message, Throwable cause) {
+        super(message, cause);
     }
 
 }

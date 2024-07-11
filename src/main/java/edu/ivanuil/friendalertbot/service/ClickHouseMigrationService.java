@@ -81,7 +81,7 @@ public class ClickHouseMigrationService {
                      .executeAndWait()) {
             log.info("Successfully connected to ClickHouse, starting migrations");
         } catch (ClickHouseException e) {
-            throw new ClickHouseMigrationsException(e);
+            throw new ClickHouseMigrationsException("ClickHouse request failed", e);
         }
     }
 
@@ -107,7 +107,7 @@ public class ClickHouseMigrationService {
                         clickHouseValues.getValue("request").asString())));
             return list;
         } catch (ClickHouseException e) {
-            throw new ClickHouseMigrationsException(e);
+            throw new ClickHouseMigrationsException("ClickHouse request failed", e);
         }
     }
 
@@ -119,7 +119,7 @@ public class ClickHouseMigrationService {
 
             return dir.listFiles();
         } catch (FileNotFoundException e) {
-            throw new ClickHouseMigrationsException(e);
+            throw new ClickHouseMigrationsException("Migration failed due to file not found exception", e);
         }
     }
 
@@ -131,7 +131,7 @@ public class ClickHouseMigrationService {
                      .executeAndWait()) {
             migration.setExecutedAt(LocalDateTime.now());
         } catch (ClickHouseException e) {
-            throw new ClickHouseMigrationsException(e);
+            throw new ClickHouseMigrationsException("ClickHouse request failed", e);
         }
 
         try (ClickHouseClient client = ClickHouseClient.newInstance(credentials, ClickHouseProtocol.HTTP);
@@ -148,7 +148,7 @@ public class ClickHouseMigrationService {
             if (response.getSummary().getWrittenRows() != 1)
                 throw new ClickHouseMigrationsException("Failed writing to migrations table");
         } catch (ClickHouseException e) {
-            throw new ClickHouseMigrationsException(e);
+            throw new ClickHouseMigrationsException("ClickHouse request failed", e);
         }
     }
 
