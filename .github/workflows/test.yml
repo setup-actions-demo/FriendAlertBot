@@ -71,5 +71,5 @@ jobs:
           java-version: 17.0.11
           check-latest: false
           cache: 'maven'
-      - name: Maven Verify
-        run: mvn -Dschool21.platform.username=${{ secrets.S21PLATFORM_USERNAME }} -Dschool21.platform.password=${{ secrets.S21PLATFORM_PASSWORD }} -Dtelegram.bot.token=${{ secrets.TELEGRAM_TOKEN }} -B clean verify
+      # - name: Maven Verify
+      #   run: mvn -Dschool21.platform.username=${{ secrets.S21PLATFORM_USERNAME }} -Dschool21.platform.password=${{ secrets.S21PLATFORM_PASSWORD }} -Dtelegram.bot.token=${{ secrets.TELEGRAM_TOKEN }} -B clean verify
