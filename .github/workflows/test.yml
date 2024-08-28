@@ -1,8 +1,6 @@
 name: Test
 
 on:
-  schedule:
-      - cron: '*/15 * * * *'
   pull_request:
     branches:
       - '*'
